@@ -91,7 +91,7 @@ class Bird:
 
 # Main game loop
 class FlappyBird:
-    def __init__(self, graphique=True, FPS=300):
+    def __init__(self, graphique=True, FPS=30):
         # Setting up initial values
         pygame.init()
         if graphique:
@@ -114,8 +114,8 @@ class FlappyBird:
             premierPipeHeight = (self.pipes[0].height - 210) / 390
             premierPipePos = self.pipes[0].pos / 600
 
-            deuxiemePipeHeight = 1
-            deuxiemePipePos = 1
+            deuxiemePipeHeight = 0.5
+            deuxiemePipePos = 0.5
 
         else:
             compteur = 0
@@ -157,7 +157,7 @@ class FlappyBird:
         sys.exit()
 
     def nextFrame(self, manual=False, entry=None):
-        hasNotLost = True
+        lossValue = 0
         if self.graphique:
             self.windowObj.fill(backgroundColor)
 
@@ -183,7 +183,7 @@ class FlappyBird:
         self.velocity += self.gravity
 
         if (not self.bird.move((0, self.velocity))):
-            hasNotLost = False
+            lossValue = 1
             self.resetGame()
             self.velocity = 0
         for pipe in self.pipes:
@@ -193,10 +193,13 @@ class FlappyBird:
             if self.graphique:
                 pipe.draw(self.windowObj)
             if (self.bird.collision(pipe)):
+                if self.bird.pos[1] < pipe.height - pipe.gap:
+                    lossValue = abs(self.bird.pos[1] - pipe.height + pipe.gap) / 480
+                else:
+                    lossValue = abs(self.bird.pos[1] - pipe.height) / 480
                 if self.graphique:
                     self.windowObj.fill(pygame.Color('#230056'))
                 self.resetGame()
-                hasNotLost = False
             if (not pipe.scored and pipe.pos + pipe.width < self.bird.pos[0]):
                 self.score += 1
                 pipe.scored = True
@@ -218,10 +221,10 @@ class FlappyBird:
         if self.graphique:
             pygame.display.update()
         self.fpsTimer.tick(self.FPS)
-        return hasNotLost
+        return lossValue
 
 
 if __name__ == "__main__":
     flappy = FlappyBird()
     while True:
-        flappy.nextFrame()
+        print(flappy.nextFrame())
