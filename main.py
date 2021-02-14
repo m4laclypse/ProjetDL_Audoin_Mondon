@@ -47,7 +47,7 @@ def update(nSt,nSc,nP,nA,mlp,X,y,alpha,mu):
     n = len(nA)-1
     #on commence par gérer l'état final
     Q = nSc[n]
-    Q = normalize(Q)
+    # Q = normalize(Q)
     state = nSt[n]
     action = nA[n]
     #on doit faire la prédiction du dernier état car elle n'a pas été faite 
@@ -60,18 +60,17 @@ def update(nSt,nSc,nP,nA,mlp,X,y,alpha,mu):
         preds = nP[i]
         state = nSt[i]
         result = nSc[i]
-        Q = (1-alpha)*preds[action] + alpha*(result + mu*Q)
-        Q = normalize(Q)
+        Q = (1-alpha)*preds[action] + alpha*(result/10 + mu*Q)
         preds[action] = Q
         X,y = add(X,y,state,preds)
     return X,y
     
-def normalize(Q):
-    if Q < 0 :
-        Q = 4*Q/1000
-    else : 
-        Q = 4*Q/100
-    return np.tanh(Q)
+# def normalize(Q):
+#     if Q < 0 :
+#         Q = 4*Q/1000
+#     else : 
+#         Q = 4*Q/100
+#     return np.tanh(Q)
 
 def fit(X,y):
     X_train = []
@@ -87,8 +86,14 @@ def fit(X,y):
                 y_train = np.append(y_train,y[i:i+1], axis = 0)
     return X_train,y_train
 
-def decrease(p):
-    return 0.95*p
+def modp(p):
+    if p > 0.1 :
+        return 0.97*p
+    else :
+        return 0
+
+def modalpha(a):
+    return 0.97*a+0.03*0.5
 
 #%% Main 
 
@@ -100,7 +105,7 @@ x = layers.Dense(10, activation='tanh')(x)
 x = layers.Dense(2, activation='tanh')(x)
 mlp = keras.Model(input_m,x)
 mlp.summary()
-mlp.compile(optimizer='adam', loss='binary_crossentropy')
+mlp.compile(optimizer='adam', loss='mse')
 
 
 
@@ -108,10 +113,12 @@ memoire = 1000
 X = np.array([[0. for j in range(6)] for i in range(memoire)])
 y = np.array([[0.,0.] for i in range(memoire)])
 
-p = 0.9
+p = 0.95
+alpha = 1
+mu = 0.9
 loss = []
 
-for iterations in range(20):
+for iterations in range(200):
     t1 = time.time()
     step = 0 
     maxstep = 10000
@@ -121,7 +128,7 @@ for iterations in range(20):
     nPred = np.array([])
     nAction = np.array([0])
     
-    flappy = FlappyBird(graphique = False, FPS = 300)
+    flappy = FlappyBird(graphique = True, FPS = 300)
     while True:
         state = np.array(flappy.getState())
         score = flappy.getScore()
@@ -132,20 +139,24 @@ for iterations in range(20):
             entry = "stay"
         gameend = flappy.nextFrame(manual=True, entry=entry)
         if not gameend :
-            nScore = np.append(nScore,-1000)
+            nScore = np.append(nScore,-1)
             break
         if step > maxstep :
-            nScore = np.append(nScore,1000)
+            nScore = np.append(nScore,1)
             break
-    X,y = update(nState,nScore,nPred,nAction,mlp,X,y,0.5,0.8)
+    X,y = update(nState,nScore,nPred,nAction,mlp,X,y,alpha,mu)
     X_train,y_train = fit(X,y)
     history  = mlp.fit(X_train, y_train,epochs=20,batch_size = 20,shuffle = True,verbose=0)
     loss += history.history['loss']
-    p = decrease(p)
     t2 = time.time()
     print("")
+    print("session n°"+str(iterations+1))
     print("session de "+str(t2-t1)+" secondes")
     print("le score est de "+str(score))
+    print("p = "+str(p))
+    print("aplpha = "+str(alpha))
+    p = modp(p)
+    alpha = modalpha(alpha)
 
 plt.plot(loss)
 mlp.save('./mlp.h5')     
