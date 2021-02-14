@@ -122,14 +122,19 @@ class FlappyBird:
 
         else:
             compteur = 0
-            while self.pipes[compteur].pos < 160:
+            while self.pipes[compteur].pos <= 160 :
                 compteur += 1
-            premierPipeHeight = (self.pipes[compteur].height - 210) / 390
-            premierPipePos = self.pipes[compteur].pos / 600
+            premierPipeHeight = (self.pipes[compteur - 1].height - 210) / 390
+            premierPipePos = self.pipes[compteur - 1].pos / 600
 
-            deuxiemePipeHeight = (self.pipes[compteur + 1].height - 210) / 390
-            deuxiemePipePos = self.pipes[compteur + 1].pos / 600
-        return [self.bird.pos[1] / 400, premierPipeHeight, premierPipePos, deuxiemePipeHeight, deuxiemePipePos, self.velocity, self.score]
+            deuxiemePipeHeight = (self.pipes[compteur].height - 210) / 390
+            deuxiemePipePos = self.pipes[compteur].pos / 600
+
+        return [self.bird.pos[1] / 400, premierPipeHeight, premierPipePos, deuxiemePipeHeight,
+                deuxiemePipePos, self.velocity / 30]
+
+    def getScore(self):
+        return self.score
         
     # Called to reset the game when you lose
     def resetGame(self):
@@ -151,7 +156,7 @@ class FlappyBird:
                         return
     
     def nextFrame(self):
-        self.getState()
+        print(self.getState())
         windowObj.fill(backgroundColor)
 
         # Check for events
