@@ -140,7 +140,7 @@ for iterations in range(200):
         else :
             entry = "stay"
         gameend = flappy.nextFrame(manual=True, entry=entry)
-        if not gameend :
+        if gameend != 0 :
             nScore = np.append(nScore,-2)
             break
         if step > maxstep :
