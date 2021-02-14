@@ -157,6 +157,7 @@ class FlappyBird:
                         return
     
     def nextFrame(self, manual=False, entry=None):
+        hasNotLost = True
         windowObj.fill(backgroundColor)
 
         if not manual:
@@ -181,6 +182,7 @@ class FlappyBird:
         self.velocity += self.gravity
 
         if (not self.bird.move((0, self.velocity))):
+            hasNotLost = False
             self.resetGame()
             self.velocity = 0
         for pipe in self.pipes:
@@ -209,6 +211,7 @@ class FlappyBird:
         if self.graphique:
             pygame.display.update()
         fpsTimer.tick(self.FPS)
+        return hasNotLost
  
 
 if __name__ == "__main__":
