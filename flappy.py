@@ -91,13 +91,14 @@ class Bird:
 
 # Main game loop
 class FlappyBird:
-    def __init__(self, graphique=True, FPS=300):
+    def __init__(self, graphique=True, FPS=30):
         # Setting up initial values
         pygame.init()
-        self.windowObj = pygame.display.set_mode((640, 480))
+        if graphique:
+            self.windowObj = pygame.display.set_mode((640, 480))
         self.fpsTimer = pygame.time.Clock()
 
-        self.bird = Bird((self.windowObj.get_width() / 4, self.windowObj.get_height() / 2))
+        self.bird = Bird((640 / 4, 480 / 2))
         self.pipes = [Pipes()]
         self.gravity = 2
         self.velocity = 0
@@ -139,7 +140,7 @@ class FlappyBird:
         self.score = 0
         self.velocity = 0
         self.pipes = [Pipes()]
-        self.bird.pos = ((self.windowObj.get_width() / 4, self.windowObj.get_height() / 2))
+        self.bird.pos = ((640 / 4, 480 / 2))
 
     def pause(self):
         while True:
@@ -157,7 +158,8 @@ class FlappyBird:
 
     def nextFrame(self, manual=False, entry=None):
         hasNotLost = True
-        self.windowObj.fill(backgroundColor)
+        if self.graphique:
+            self.windowObj.fill(backgroundColor)
 
         if not manual:
             # Check for events
@@ -185,12 +187,14 @@ class FlappyBird:
             self.resetGame()
             self.velocity = 0
         for pipe in self.pipes:
-            if not pipe.replaced and pipe.pos < self.windowObj.get_width() / 2:
+            if not pipe.replaced and pipe.pos < 640 / 2:
                 self.pipes[len(self.pipes):] = [Pipes()]
                 pipe.replaced = True
-            pipe.draw(self.windowObj)
+            if self.graphique:
+                pipe.draw(self.windowObj)
             if (self.bird.collision(pipe)):
-                self.windowObj.fill(pygame.Color('#230056'))
+                if self.graphique:
+                    self.windowObj.fill(pygame.Color('#230056'))
                 self.resetGame()
                 hasNotLost = False
             if (not pipe.scored and pipe.pos + pipe.width < self.bird.pos[0]):
@@ -203,12 +207,13 @@ class FlappyBird:
         scoreSurface = self.fontObj.render('Score: ' + str(self.score) + ' High: ' + str(self.highScore),
                                            False, fontColor)
         scoreRect = scoreSurface.get_rect()
-        scoreRect.topleft = (self.windowObj.get_height() / 2, 10)
-        self.windowObj.blit(scoreSurface, scoreRect)
-        pygame.draw.rect(self.windowObj, groundColor, (0, groundLevel, self.windowObj.get_width(),
-                                                       self.windowObj.get_height()))
+        if self.graphique:
+            scoreRect.topleft = (self.windowObj.get_height() / 2, 10)
+            self.windowObj.blit(scoreSurface, scoreRect)
+            pygame.draw.rect(self.windowObj, groundColor, (0, groundLevel, self.windowObj.get_width(),
+                                                        self.windowObj.get_height()))
 
-        self.bird.draw(self.windowObj)
+            self.bird.draw(self.windowObj)
 
         if self.graphique:
             pygame.display.update()
