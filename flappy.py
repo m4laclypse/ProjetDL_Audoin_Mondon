@@ -156,7 +156,6 @@ class FlappyBird:
                         return
     
     def nextFrame(self):
-        print(self.getState())
         windowObj.fill(backgroundColor)
 
         # Check for events
