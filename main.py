@@ -97,7 +97,7 @@ def modp(p):
 def modalpha(a):
     return 0.97*a+0.03*0.5
 
-#%% Main 
+#%% Reseau
 
 
 
@@ -108,17 +108,22 @@ x = layers.Dense(2, activation='tanh')(x)
 mlp = keras.Model(input_m,x)
 mlp.summary()
 mlp.compile(optimizer='adam', loss='mse')
+mlp.save('./mlp.h5')   
 
-
-
-memoire = 1000
+memoire = 5000
 X = np.array([[0. for j in range(6)] for i in range(memoire)])
 y = np.array([[0.,0.] for i in range(memoire)])
 
-p = 0.95
-alpha = 1
+#%% Main
+
+
+mlp = models.load_model('./mlp.h5')
+
+p = 0.99
+alpha = 0.99
 mu = 0.95
 loss = []
+scores = []
 
 for iterations in range(200):
     t1 = time.time()
@@ -129,12 +134,15 @@ for iterations in range(200):
     nScore = np.array([])
     nPred = np.array([])
     nAction = np.array([0])
-    
+    survival_points = 0
     flappy = FlappyBird(graphique = True, FPS = 300)
     while True:
         state = np.array(flappy.getState())
         score = flappy.getScore()
+        this_score = score
+        score += survival_points
         action,nState,nScore,nPred,nAction = act(nState,nScore,nPred,nAction,mlp,state,score,p)
+        survival_points += 0.01
         if action == 1:
             entry = "jump"
         else :
@@ -150,6 +158,7 @@ for iterations in range(200):
     X_train,y_train = fit(X,y)
     history  = mlp.fit(X_train, y_train,epochs=20,batch_size = 20,shuffle = True,verbose=0)
     loss += history.history['loss']
+    scores.append(this_score)
     t2 = time.time()
     print("")
     print("session n°"+str(iterations+1))
