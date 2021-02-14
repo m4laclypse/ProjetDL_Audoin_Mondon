@@ -192,6 +192,7 @@ class FlappyBird:
             if (self.bird.collision(pipe)):
                 self.windowObj.fill(pygame.Color('#230056'))
                 self.resetGame()
+                hasNotLost = False
             if (not pipe.scored and pipe.pos + pipe.width < self.bird.pos[0]):
                 self.score += 1
                 pipe.scored = True
