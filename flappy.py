@@ -23,7 +23,6 @@ from pygame.locals import *
 # Set up resolution
 windowObj = pygame.display.set_mode( ( 640, 480) )
 fpsTimer = pygame.time.Clock()
-maxFPS = 30
 
 # Ground Elevation (pixels)
 groundLevel = 400
@@ -103,7 +102,7 @@ class Bird:
 
 # Main game loop
 class FlappyBird:
-    def __init__(self):
+    def __init__(self, graphique=True, FPS=30):
         # Setting up initial values
         self.bird = Bird((windowObj.get_width() / 4 , windowObj.get_height() / 2))
         self.pipes = [ Pipes()]
@@ -111,6 +110,8 @@ class FlappyBird:
         self.velocity = 0
         self.score = 0
         self.highScore = 0
+        self.graphique = graphique
+        self.FPS = FPS
     
     def getState(self):
         if len(self.pipes) == 1:
@@ -198,8 +199,9 @@ class FlappyBird:
 
         self.bird.draw(windowObj)
 
-        pygame.display.update()
-        fpsTimer.tick(maxFPS)
+        if self.graphique:
+            pygame.display.update()
+        fpsTimer.tick(self.FPS)
  
 
 if __name__ == "__main__":
