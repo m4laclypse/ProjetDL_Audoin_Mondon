@@ -5,7 +5,7 @@ import numpy as np
 from keras import models
 import time
 import tensorflow as tf
-
+import matplotlib.pyplot as plt
 
 #%% Deep Q-Learning
 
@@ -85,15 +85,17 @@ def fit(X,y):
                 X_train = np.append(X_train,X[i:i+1], axis = 0)
                 y_train = np.append(y_train,y[i:i+1], axis = 0)
     return X_train,y_train
-                
+
+def decrease(p):
+    return 0.95*p
 
 #%% Main 
 
 
 
 input_m = keras.Input(shape=(6,)) 
-x = layers.Dense(40, activation='tanh')(input_m)
-x = layers.Dense(20, activation='tanh')(x)
+x = layers.Dense(20, activation='tanh')(input_m)
+x = layers.Dense(10, activation='tanh')(x)
 x = layers.Dense(2, activation='tanh')(x)
 mlp = keras.Model(input_m,x)
 mlp.summary()
@@ -105,9 +107,10 @@ memoire = 1000
 X = np.array([[0. for j in range(6)] for i in range(memoire)])
 y = np.array([[0.,0.] for i in range(memoire)])
 
+p = 0.9
+loss = []
 
-
-for iterations in range(2):
+for iterations in range(20):
     step = 0 
     maxstep = 10000
     state_0 = np.zeros(6)
@@ -120,7 +123,6 @@ for iterations in range(2):
     while True:
         state = np.array(flappy.getState())
         score = flappy.getScore()
-        p = 0.9
         action,nState,nScore,nPred,nAction = act(nState,nScore,nPred,nAction,mlp,state,score,p)
         if action == 1:
             entry = "jump"
@@ -136,6 +138,9 @@ for iterations in range(2):
     X,y = update(nState,nScore,nPred,nAction,mlp,X,y,0.5,0.8)
     X_train,y_train = fit(X,y)
     history  = mlp.fit(X_train, y_train,epochs=20,batch_size = 20,shuffle = True,verbose=1)
-    
+    loss += history.history['loss']
+    p = decrease(p)
+
+plt.plot(loss)
 mlp.save('./mlp.h5')     
 flappy.exit()
