@@ -34,7 +34,8 @@ def add(X,val):
     i = np.random.randint(0,n)
     X[i] = val
     return X 
-
+    
+    
 
 #%% Main 
 
@@ -61,14 +62,16 @@ y = [-1 for i in range(memoire)]
 
 flappy = FlappyBird()
 while True:
-    state = np.array(flappy.getState())
-    score = flappy.getScore()
-    p = 1
-    action,nState,nScore,nPred = act(nState,nScore,nPred,mlp,state,score,p)
-    if action == 1:
-        entry = "jump"
-    else :
-        entry = "stay"
-    gameend = flappy.nextFrame(manual=True, entry=entry)
+    # state = np.array(flappy.getState())
+    # score = flappy.getScore()
+    # p = 1
+    # action,nState,nScore,nPred = act(nState,nScore,nPred,mlp,state,score,p)
+    # if action == 1:
+    #     entry = "jump"
+    # else :
+    #     entry = "stay"
+    entry = None
+    gameend = flappy.nextFrame(manual=False, entry=entry)
     if not gameend :
         flappy.exit()
+        
