@@ -91,7 +91,7 @@ class Bird:
 
 # Main game loop
 class FlappyBird:
-    def __init__(self, graphique=True, FPS=30):
+    def __init__(self, graphique=True, FPS=300):
         # Setting up initial values
         pygame.init()
         if graphique:

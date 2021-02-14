@@ -6,6 +6,7 @@ from keras import models
 import time
 import tensorflow as tf
 import matplotlib.pyplot as plt
+import time as time 
 
 #%% Deep Q-Learning
 
@@ -111,6 +112,7 @@ p = 0.9
 loss = []
 
 for iterations in range(20):
+    t1 = time.time()
     step = 0 
     maxstep = 10000
     state_0 = np.zeros(6)
@@ -119,7 +121,7 @@ for iterations in range(20):
     nPred = np.array([])
     nAction = np.array([0])
     
-    flappy = FlappyBird()
+    flappy = FlappyBird(graphique = False, FPS = 300)
     while True:
         state = np.array(flappy.getState())
         score = flappy.getScore()
@@ -137,9 +139,13 @@ for iterations in range(20):
             break
     X,y = update(nState,nScore,nPred,nAction,mlp,X,y,0.5,0.8)
     X_train,y_train = fit(X,y)
-    history  = mlp.fit(X_train, y_train,epochs=20,batch_size = 20,shuffle = True,verbose=1)
+    history  = mlp.fit(X_train, y_train,epochs=20,batch_size = 20,shuffle = True,verbose=0)
     loss += history.history['loss']
     p = decrease(p)
+    t2 = time.time()
+    print("")
+    print("session de "+str(t2-t1)+" secondes")
+    print("le score est de "+str(score))
 
 plt.plot(loss)
 mlp.save('./mlp.h5')     
