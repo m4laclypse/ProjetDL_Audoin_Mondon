@@ -69,4 +69,6 @@ while True:
         entry = "jump"
     else :
         entry = "stay"
-    flappy.nextFrame(manual=True, entry=entry)
+    gameend = flappy.nextFrame(manual=True, entry=entry)
+    if not gameend :
+        flappy.exit()
