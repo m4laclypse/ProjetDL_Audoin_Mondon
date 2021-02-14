@@ -103,82 +103,82 @@ class Bird:
 
 # Main game loop
 class FlappyBird:
-   def __init__(self):
-      # Setting up initial values
-      self.bird = Bird((windowObj.get_width() / 4 , windowObj.get_height() / 2))
-      self.pipes = [ Pipes()]
-      self.gravity = 2
-      self.velocity = 0
-      self.score = 0
-      self.highScore = 0
-      
-   # Called to reset the game when you lose
-   def resetGame(self):
-       if ( self.score > self.highScore ):
-           self.highScore = self.score
-       self.score = 0
-       self.velocity = 0
-       self.pipes = [ Pipes() ]
-       self.bird.pos = ( (windowObj.get_width() / 4 , windowObj.get_height() / 2) )
+    def __init__(self):
+        # Setting up initial values
+        self.bird = Bird((windowObj.get_width() / 4 , windowObj.get_height() / 2))
+        self.pipes = [ Pipes()]
+        self.gravity = 2
+        self.velocity = 0
+        self.score = 0
+        self.highScore = 0
+        
+    # Called to reset the game when you lose
+    def resetGame(self):
+        if ( self.score > self.highScore ):
+            self.highScore = self.score
+        self.score = 0
+        self.velocity = 0
+        self.pipes = [ Pipes() ]
+        self.bird.pos = ( (windowObj.get_width() / 4 , windowObj.get_height() / 2) )
 
-   def pause(self):
-       while True:
-           for event in pygame.event.get():
-               if event.type == QUIT:
-                   pygame.quit()
-                   sys.exit()
-               elif event.type == KEYDOWN:
-                   if ( event.key == K_ESCAPE):
-                       return
-   
-   def nextFrame(self):
-       windowObj.fill(backgroundColor)
+    def pause(self):
+        while True:
+            for event in pygame.event.get():
+                if event.type == QUIT:
+                    pygame.quit()
+                    sys.exit()
+                elif event.type == KEYDOWN:
+                    if ( event.key == K_ESCAPE):
+                        return
+    
+    def nextFrame(self):
+        windowObj.fill(backgroundColor)
 
-       # Check for events
-       for event in pygame.event.get():
-           if event.type == QUIT:
-               pygame.quit()
-               sys.exit()
-           elif event.type == KEYDOWN:
-               if ( event.key == K_ESCAPE):
-                   self.pause()
-               # If the player hits a key, set velocity upward
-               self.velocity = -20
+        # Check for events
+        for event in pygame.event.get():
+            if event.type == QUIT:
+                pygame.quit()
+                sys.exit()
+            elif event.type == KEYDOWN:
+                if ( event.key == K_ESCAPE):
+                    self.pause()
+                # If the player hits a key, set velocity upward
+                self.velocity = -20
 
-       # Add acceleration from gravity
-       self.velocity += self.gravity
+        # Add acceleration from gravity
+        self.velocity += self.gravity
 
-       if (not self.bird.move((0, self.velocity))):
-           self.resetGame()
-           self.velocity = 0
-       for pipe in self.pipes:
-           if not pipe.replaced and pipe.pos < windowObj.get_width() / 2  :
-               self.pipes[len(self.pipes):] = [Pipes()]
-               pipe.replaced = True
-           pipe.draw(windowObj)
-           if (self.bird.collision(pipe)):
-               windowObj.fill(pygame.Color('#230056'))
-               self.resetGame()
-           if ( not pipe.scored and pipe.pos + pipe.width < self.bird.pos[0] ):
-               self.score += 1
-               pipe.scored = True
-           if( not pipe.move(-10)):
-               del pipe
+        if (not self.bird.move((0, self.velocity))):
+            self.resetGame()
+            self.velocity = 0
+        for pipe in self.pipes:
+            if not pipe.replaced and pipe.pos < windowObj.get_width() / 2  :
+                self.pipes[len(self.pipes):] = [Pipes()]
+                pipe.replaced = True
+            pipe.draw(windowObj)
+            if (self.bird.collision(pipe)):
+                windowObj.fill(pygame.Color('#230056'))
+                self.resetGame()
+            if ( not pipe.scored and pipe.pos + pipe.width < self.bird.pos[0] ):
+                self.score += 1
+                pipe.scored = True
+            if( not pipe.move(-10)):
+                del pipe
 
-       # Draw stuff
-       scoreSurface = fontObj.render( 'Score: ' + str(score) + ' High: ' + str(self.highScore), False, fontColor)
-       scoreRect = scoreSurface.get_rect()
-       scoreRect.topleft = (windowObj.get_height() / 2 , 10)
-       windowObj.blit(scoreSurface, scoreRect)
-       pygame.draw.rect(windowObj, groundColor, (0, groundLevel, windowObj.get_width(), windowObj.get_height()) )
+        # Draw stuff
+        scoreSurface = fontObj.render( 'Score: ' + str(self.score) + ' High: ' + str(self.highScore), False, fontColor)
+        scoreRect = scoreSurface.get_rect()
+        scoreRect.topleft = (windowObj.get_height() / 2 , 10)
+        windowObj.blit(scoreSurface, scoreRect)
+        pygame.draw.rect(windowObj, groundColor, (0, groundLevel, windowObj.get_width(), windowObj.get_height()) )
 
-       self.bird.draw(windowObj)
+        self.bird.draw(windowObj)
 
-       pygame.display.update()
-       fpsTimer.tick(maxFPS)
+        pygame.display.update()
+        fpsTimer.tick(maxFPS)
  
 
-if __name__ == __main__:
-   flappy = FlappyBird()
-   while True:
-      flappy.nextFrame()
+if __name__ == "__main__":
+    flappy = FlappyBird()
+    while True:
+        flappy.nextFrame()
