@@ -14,8 +14,9 @@ import time
 import tensorflow as tf
 
 state_0 = np.zeros(42)
-nX = np.array([state_0])
-ny = np.array([0])
+
+nState = np.array([state_0])
+nScore = np.array([])
 
 def add(X,val):
     n = len(X)
@@ -32,17 +33,15 @@ mlp.summary()
 mlp.compile(optimizer='adam', loss='binary_crossentropy')
 mlp.save('./mlp.h5')
 
-def act(nX,ny,mlp,state,score,alea,p):
+def act(nSt,nSc,mlp,state,score,alea,p):
     state = state.reshape((1,len(state)))
-    nX = np.append(nX,state, axis = 0)
+    nSt = np.append(nSt,state, axis = 0)
+    nSc = np.append(nSc,score)
     res = mlp.predict(state)[0]
     n_action = len(res)
     action_true = np.argmax(res)
     action = alea(n_action,action_true,p)
-    y = res[action]
-    ny[-1] += score
-    ny = np.append(ny,y)
-    return action,nX,ny
+    return action,nSt,nSc
     
 
 def alea(n,a,p):
@@ -51,13 +50,15 @@ def alea(n,a,p):
         return np.random.randint(0,n)
     else :
         return a
+    
+a,nState,nScore = act(nState,nScore,mlp,state_0,0,alea,1)
+a,nState,nScore = act(nState,nScore,mlp,state_0,1,alea,1)
+a,nState,nScore = act(nState,nScore,mlp,state_0,2,alea,1)
 
-a = np.zeros(42)
-ac,nX,ny = act(nX,ny,mlp,a,0,alea,0)
-ac,nX,ny = act(nX,ny,mlp,a,1,alea,0)
-print(act(nX,ny,mlp,a,1,alea,0))
 
-memoire = 10 
+memoire = 10000
 X = [[] for i in range(memoire)]
 y = [-1 for i in range(memoire)]
+
+
 
