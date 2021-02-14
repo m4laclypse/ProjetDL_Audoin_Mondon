@@ -155,6 +155,10 @@ class FlappyBird:
                 elif event.type == KEYDOWN:
                     if ( event.key == K_ESCAPE):
                         return
+
+    def exit(self):
+        pygame.quit()
+        sys.exit()
     
     def nextFrame(self, manual=False, entry=None):
         hasNotLost = True
