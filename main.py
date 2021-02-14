@@ -54,15 +54,17 @@ def update(nSt,nSc,nP,nA,mlp,X,y,alpha,mu):
     preds = mlp.predict(np.reshape(state,(1,len(state))))[0]
     preds[action] = Q
     X,y = add(X,y,state,preds)
+    predsprec = preds
     for j in range(n-1):
         i = n - j - 1
         action = nA[i]
         preds = nP[i]
         state = nSt[i]
         result = nSc[i]
-        Q = (1-alpha)*preds[action] + alpha*(result/10 + mu*Q)
+        Q = (1-alpha)*preds[action] + alpha*(result/10 + mu*max(predsprec))
         preds[action] = Q
         X,y = add(X,y,state,preds)
+        predsprec = preds
     return X,y
     
 # def normalize(Q):
@@ -115,7 +117,7 @@ y = np.array([[0.,0.] for i in range(memoire)])
 
 p = 0.95
 alpha = 1
-mu = 0.9
+mu = 0.95
 loss = []
 
 for iterations in range(200):
@@ -139,10 +141,10 @@ for iterations in range(200):
             entry = "stay"
         gameend = flappy.nextFrame(manual=True, entry=entry)
         if not gameend :
-            nScore = np.append(nScore,-1)
+            nScore = np.append(nScore,-2)
             break
         if step > maxstep :
-            nScore = np.append(nScore,1)
+            nScore = np.append(nScore,2)
             break
     X,y = update(nState,nScore,nPred,nAction,mlp,X,y,alpha,mu)
     X_train,y_train = fit(X,y)
