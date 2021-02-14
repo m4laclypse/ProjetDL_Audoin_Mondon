@@ -156,18 +156,25 @@ class FlappyBird:
                     if ( event.key == K_ESCAPE):
                         return
     
-    def nextFrame(self):
+    def nextFrame(self, manual=False, entry=None):
         windowObj.fill(backgroundColor)
 
-        # Check for events
-        for event in pygame.event.get():
-            if event.type == QUIT:
+        if not manual:
+            # Check for events
+            for event in pygame.event.get():
+                if event.type == QUIT:
+                    pygame.quit()
+                    sys.exit()
+                elif event.type == KEYDOWN:
+                    if ( event.key == K_ESCAPE):
+                        self.pause()
+                    # If the player hits a key, set velocity upward
+                    self.velocity = -20
+        else:
+            if entry == "quit":
                 pygame.quit()
                 sys.exit()
-            elif event.type == KEYDOWN:
-                if ( event.key == K_ESCAPE):
-                    self.pause()
-                # If the player hits a key, set velocity upward
+            elif entry == "jump":
                 self.velocity = -20
 
         # Add acceleration from gravity
