@@ -106,6 +106,7 @@ class FlappyBird:
         self.highScore = 0
         self.graphique = graphique
         self.FPS = FPS
+        self.gap = 150
 
         self.fontObj = pygame.font.Font(None, 16)
 
@@ -127,7 +128,7 @@ class FlappyBird:
             deuxiemePipeHeight = (self.pipes[compteur].height - 210) / 390
             deuxiemePipePos = self.pipes[compteur].pos / 600
 
-        return [self.bird.pos[1] / 400, premierPipeHeight, premierPipePos, deuxiemePipeHeight,
+        return [self.bird.pos[1] / 400, premierPipeHeight, premierPipeHeight - self.gap, premierPipePos, deuxiemePipeHeight, deuxiemePipeHeight - self.gap,
                 deuxiemePipePos, self.velocity / 30]
 
     def getScore(self):
@@ -227,4 +228,5 @@ class FlappyBird:
 if __name__ == "__main__":
     flappy = FlappyBird()
     while True:
-        print(flappy.nextFrame())
+        flappy.nextFrame()
+        print(flappy.getState())
