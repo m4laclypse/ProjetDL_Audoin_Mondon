@@ -7,6 +7,7 @@ import time
 import tensorflow as tf
 import matplotlib.pyplot as plt
 import time as time 
+from sklearn.model_selection import train_test_split
 
 #%% Deep Q-Learning
 
@@ -107,9 +108,8 @@ def normalize(getstate):
 nbstates = 6*4
 
 input_m = keras.Input(shape=(nbstates,)) 
-x = layers.Dense(40, activation='tanh')(input_m)
-x = layers.Dense(20, activation='tanh')(x)
-x = layers.Dense(10, activation='tanh')(x)
+x = layers.Dense(80, activation='tanh')(input_m)
+x = layers.Dense(40, activation='tanh')(x)
 x = layers.Dense(2, activation='tanh')(x)
 mlp = keras.Model(input_m,x)
 mlp.summary()
@@ -129,6 +129,7 @@ p = 0.99
 alpha = 0.99
 mu = 0.8
 loss = []
+valloss = []
 scores = []
 
 for iterations in range(200):
@@ -170,9 +171,13 @@ for iterations in range(200):
             nScore = np.append(nScore,2)
             break
     X,y = update(nState,nScore,nPred,nAction,mlp,X,y,alpha,mu)
-    X_train,y_train = fit(X,y)
-    history  = mlp.fit(X_train, y_train,epochs=10,batch_size = 50,shuffle = True,verbose=0)
+    X_f,y_f = fit(X,y)
+    # X_train, X_test, y_train, y_test = train_test_split(X_f, y_f, test_size = 0.3, shuffle = True)
+    history  = mlp.fit(X_f, y_f,epochs=10,batch_size = 50,shuffle = True,verbose=0,
+                       # validation_data=(X_test, y_test)
+                       )
     loss += history.history['loss']
+    valloss += history.history['val_loss']
     scores.append(this_score)
     t2 = time.time()
     print("")
@@ -187,6 +192,7 @@ for iterations in range(200):
 
 plt.figure()
 plt.plot(loss)
+plt.plot(valloss)
 plt.figure()
 plt.plot(scores)
 mlp.save('./mlp.h5')     
