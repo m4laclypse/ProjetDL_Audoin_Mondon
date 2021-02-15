@@ -114,8 +114,8 @@ class FlappyBird:
             premierPipeHeight = (self.pipes[0].height - 210) / 390
             premierPipePos = self.pipes[0].pos / 600
 
-            deuxiemePipeHeight = 0.5
-            deuxiemePipePos = 0.5
+            deuxiemePipeHeight = 0.
+            deuxiemePipePos = 0.
 
         else:
             compteur = 0

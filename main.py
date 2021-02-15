@@ -47,7 +47,6 @@ def update(nSt,nSc,nP,nA,mlp,X,y,alpha,mu):
     n = len(nA)-1
     #on commence par gérer l'état final
     Q = nSc[n]
-    # Q = normalize(Q)
     state = nSt[n]
     action = nA[n]
     #on doit faire la prédiction du dernier état car elle n'a pas été faite 
@@ -66,13 +65,7 @@ def update(nSt,nSc,nP,nA,mlp,X,y,alpha,mu):
         X,y = add(X,y,state,preds)
         predsprec = preds
     return X,y
-    
-# def normalize(Q):
-#     if Q < 0 :
-#         Q = 4*Q/1000
-#     else : 
-#         Q = 4*Q/100
-#     return np.tanh(Q)
+
 
 def fit(X,y):
     X_train = []
@@ -97,12 +90,25 @@ def modp(p):
 def modalpha(a):
     return 0.97*a+0.03*0.5
 
+def normalize(getstate):
+    Lmean = [5.870e-01, 2.158e-01, 2.890e-02, 2.235e-01, 4.622e-01, -4.000e-04]
+    Lstd = [0.1286, 0.1291, 0.13, 0.1465, 0.2003, 0.388 ]
+    if getstate[2] >= 0.45 :
+        getstate[2] = 0.0
+    for i in range(6):
+        getstate[i] = (getstate[i]-Lmean[i])/Lstd[i]
+    if getstate[4] <= -1.75 :
+        getstate[4] = 0.0
+    return getstate
+
+
 #%% Reseau
 
+nbstates = 6*4
 
-
-input_m = keras.Input(shape=(6,)) 
-x = layers.Dense(20, activation='tanh')(input_m)
+input_m = keras.Input(shape=(nbstates,)) 
+x = layers.Dense(40, activation='tanh')(input_m)
+x = layers.Dense(20, activation='tanh')(x)
 x = layers.Dense(10, activation='tanh')(x)
 x = layers.Dense(2, activation='tanh')(x)
 mlp = keras.Model(input_m,x)
@@ -111,7 +117,7 @@ mlp.compile(optimizer='adam', loss='mse')
 mlp.save('./mlp.h5')   
 
 memoire = 5000
-X = np.array([[0. for j in range(6)] for i in range(memoire)])
+X = np.array([[0. for j in range(nbstates)] for i in range(memoire)])
 y = np.array([[0.,0.] for i in range(memoire)])
 
 #%% Main
@@ -121,23 +127,32 @@ mlp = models.load_model('./mlp.h5')
 
 p = 0.99
 alpha = 0.99
-mu = 0.95
+mu = 0.8
 loss = []
 scores = []
 
 for iterations in range(200):
     t1 = time.time()
     step = 0 
-    maxstep = 10000
-    state_0 = np.zeros(6)
+    flappy = FlappyBird(graphique = True, FPS = 300)
+    maxstep = 1000
+    state_0 = np.zeros(nbstates)
     nState = np.array([state_0])
     nScore = np.array([])
     nPred = np.array([])
     nAction = np.array([0])
     survival_points = 0
-    flappy = FlappyBird(graphique = True, FPS = 300)
+    
+    state = []
     while True:
-        state = np.array(flappy.getState())
+        getstate = flappy.getState()
+        getstate = normalize(getstate)
+        if state == []:
+            state = np.array(getstate.copy()+getstate.copy()+getstate.copy()+getstate.copy())
+        else : 
+            state[6:] = state[:nbstates-6]
+            state[:6] = np.array(getstate.copy())
+            
         score = flappy.getScore()
         this_score = score
         score += survival_points
@@ -156,7 +171,7 @@ for iterations in range(200):
             break
     X,y = update(nState,nScore,nPred,nAction,mlp,X,y,alpha,mu)
     X_train,y_train = fit(X,y)
-    history  = mlp.fit(X_train, y_train,epochs=20,batch_size = 20,shuffle = True,verbose=0)
+    history  = mlp.fit(X_train, y_train,epochs=10,batch_size = 50,shuffle = True,verbose=0)
     loss += history.history['loss']
     scores.append(this_score)
     t2 = time.time()
@@ -169,6 +184,41 @@ for iterations in range(200):
     p = modp(p)
     alpha = modalpha(alpha)
 
+
+plt.figure()
 plt.plot(loss)
+plt.figure()
+plt.plot(scores)
 mlp.save('./mlp.h5')     
 flappy.exit()
+
+#%%
+plt.figure()
+plt.subplot(3,2,1)
+plt.plot(X[:,0])
+plt.title("val1")
+
+plt.subplot(3,2,2)
+plt.plot(X[:,1])
+
+plt.title("val2")
+
+plt.subplot(3,2,3)
+plt.plot(X[:,2])
+plt.title("val3")
+
+plt.subplot(3,2,4)
+plt.plot(X[:,3])
+
+plt.title("val4")
+
+plt.subplot(3,2,5)
+plt.plot(X[:,4])
+
+plt.title("val5")
+
+plt.subplot(3,2,6)
+plt.plot(X[:,5])
+
+plt.title("val6")
+
