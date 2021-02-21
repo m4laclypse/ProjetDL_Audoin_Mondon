@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 """
 Created on Sun Feb 14 13:58:18 2021
+
 @author: loic9
 """
 
@@ -34,6 +35,7 @@ class Pipes:
     pos = 600
     replaced = False
     scored = False
+    first = False
 
     # Randomize pipe location
     def __init__(self):
@@ -91,7 +93,7 @@ class Bird:
 
 # Main game loop
 class FlappyBird:
-    def __init__(self, graphique=True, FPS=30, save=None):
+    def __init__(self, graphique=True, FPS=30, save=None, quickstart=False):
         # Setting up initial values
         pygame.init()
         if graphique:
@@ -99,7 +101,20 @@ class FlappyBird:
             self.fpsTimer = pygame.time.Clock()
 
         self.bird = Bird((640 / 4, 480 / 2))
-        self.pipes = [Pipes()]
+
+        if quickstart:
+            pipe1 = Pipes()
+            pipe1.pos = 320
+            pipe1.height = 320
+            pipe1.First = True
+            pipe1.replaced = True
+            pipe2 = Pipes()
+            pipe2.pos = 600
+            pipe2.height = 320
+            self.pipes = [pipe1, pipe2]
+        else:
+            self.pipes = [Pipes()]
+
         self.gravity = 2
         self.velocity = 0
         self.score = 0
@@ -109,6 +124,7 @@ class FlappyBird:
         self.gap = 150
         self.save = save
         self.data=[]
+        self.quickstart = quickstart
         self.fontObj = pygame.font.Font(None, 16)
 
     def getState(self):
@@ -129,12 +145,8 @@ class FlappyBird:
             deuxiemePipeHeight = (self.pipes[compteur].height - 210) / 390
             deuxiemePipePos = self.pipes[compteur].pos / 600
 
-
         return [self.bird.pos[1] / 400, premierPipeHeight, premierPipePos, deuxiemePipeHeight,
                 deuxiemePipePos, self.velocity / 30]
-
-        # return [self.bird.pos[1] / 400, premierPipeHeight, premierPipeHeight - self.gap, premierPipePos, deuxiemePipeHeight, deuxiemePipeHeight - self.gap,
-        #         deuxiemePipePos, self.velocity / 30]
 
     def getScore(self):
         return self.score
@@ -146,7 +158,19 @@ class FlappyBird:
             self.highScore = self.score
         self.score = 0
         self.velocity = 0
-        self.pipes = [Pipes()]
+
+        if self.quickstart:
+            pipe1 = Pipes()
+            pipe1.pos = 320
+            pipe1.height = 320
+            pipe1.First = True
+            pipe1.replaced = True
+            pipe2 = Pipes()
+            pipe2.pos = 600
+            pipe2.height = 320
+            self.pipes = [pipe1, pipe2]
+        else:
+            self.pipes = [Pipes()]
         self.bird.pos = ((640 / 4, 480 / 2))
 
     def pause(self):
@@ -169,10 +193,11 @@ class FlappyBird:
         return self.data
 
     def nextFrame(self, manual=False, entry=None):
-        lossValue = 0
+        lossValue = 0 
         if self.graphique:
             self.windowObj.fill(backgroundColor)
 
+        hasJumped = False
         if not manual:
             # Check for events
             for event in pygame.event.get():
@@ -180,13 +205,19 @@ class FlappyBird:
                     pygame.quit()
                     sys.exit()
                 elif event.type == KEYDOWN:
-                    self.data.append((self.getState(), "jump"))
+                    hasJumped = True
                     if (event.key == K_ESCAPE):
                         self.pause()
                     # If the player hits a key, set velocity upward
                     self.velocity = -20
-                else:
-                    self.data.append((self.getState(), "stay"))
+        
+        if hasJumped:
+            self.data.append((normalize(self.getState()), "jump"))
+        else:
+            self.data.append((normalize(self.getState()), "stay"))
+
+        if len(self.data) % 100 == 0:
+            print("On a ", len(self.data), " points de données")
         else:
             if entry == "quit":
                 pygame.quit()
@@ -202,7 +233,7 @@ class FlappyBird:
             self.resetGame()
             self.velocity = 0
         for pipe in self.pipes:
-            if not pipe.replaced and pipe.pos < 640 / 2:
+            if not pipe.replaced and pipe.pos < 640 / 2 and not pipe.first:
                 self.pipes[len(self.pipes):] = [Pipes()]
                 pipe.replaced = True
             if self.graphique:
@@ -239,7 +270,19 @@ class FlappyBird:
         return lossValue
 
 
+def normalize(getstate):
+    Lmean = [5.870e-01, 2.158e-01, 2.890e-02, 2.235e-01, 4.622e-01, -4.000e-04]
+    Lstd = [0.1286, 0.1291, 0.13, 0.1465, 0.2003, 0.388 ]
+    if getstate[2] >= 0.45 :
+        getstate[2] = 0.0
+    for i in range(6):
+        getstate[i] = (getstate[i]-Lmean[i])/Lstd[i]
+    if getstate[4] <= -1.75 :
+        getstate[4] = 0.0
+    return getstate
+
+
 if __name__ == "__main__":
-    flappy = FlappyBird()
+    flappy = FlappyBird(save="entryDataDepart.pickle.dat")
     while True:
         flappy.nextFrame()
