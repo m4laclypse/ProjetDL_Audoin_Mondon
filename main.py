@@ -15,7 +15,7 @@ def alea(n,a,p):
     r = np.random.random()
     if r < p:
         nr = np.random.random()
-        if nr < 0.07 : return 1
+        if nr <= 0.055 : return 1
         else : return 0
     else :
         return a
@@ -122,9 +122,46 @@ mlp.summary()
 mlp.compile(optimizer='adam', loss='mae')
 mlp.save('./mlp.h5')   
 
+# memoire = 5000
+# X = np.array([[0. for j in range(nbstates)] for i in range(memoire)])
+# y = np.array([[0.,0.] for i in range(memoire)])
+
+
+#%% pre data
+
+import pickle
+file = open("entryData.pickle.dat", "br")
+data = pickle.load(file)
+
+memoire = len(data)
+X = np.array([[0. for j in range(nbstates)] for i in range(memoire)])
+y = np.array([[0.,0.] for i in range(memoire)])
+
+state = []
+for i in range(memoire):
+    getstate = data[i][0]
+    if state == []:
+            state = np.array(getstate.copy()+getstate.copy()+getstate.copy()+getstate.copy())
+    else : 
+        state[nelt:] = state[:nbstates-nelt]
+        state[:nelt] = np.array(getstate.copy()) 
+    X[i] = state
+    if data[i][1] == 'stay':
+        y[i] = np.array([1,-1])
+    else :
+        y[i] = np.array([-1,1])
+
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size = 0.3, shuffle = True)
+history  = mlp.fit(X_train, y_train,epochs=40,batch_size = 50,shuffle = True,verbose=1,
+                    validation_data=(X_test, y_test)
+                    )
+
+
 memoire = 5000
 X = np.array([[0. for j in range(nbstates)] for i in range(memoire)])
 y = np.array([[0.,0.] for i in range(memoire)])
+
+
 loss = []
 valloss = []
 scores = []
@@ -135,7 +172,7 @@ scores = []
 
 mlp = models.load_model('./mlp.h5')
 
-p = 0.99
+p = 0.0
 alpha = 0.99
 mu = 0.9
 

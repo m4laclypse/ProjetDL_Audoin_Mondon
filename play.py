@@ -62,7 +62,7 @@ nbstates = nelt*4
 scores = []
 
 
-for iterations in range(5):
+for iterations in range(20):
     step = 0 
     flappy = FlappyBird(graphique = True, FPS = 30)
     maxstep = 1000
