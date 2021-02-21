@@ -8,6 +8,7 @@ Created on Sun Feb 14 13:58:18 2021
 import pygame
 import sys
 import math
+import pickle
 from random import randrange as randH
 
 from pygame.constants import KEYDOWN, K_ESCAPE, QUIT
@@ -30,7 +31,7 @@ class Pipes:
 
     height = 0
     width = 60
-    gap = 250#150
+    gap = 250  # 150
     pos = 600
     replaced = False
     scored = False
@@ -91,7 +92,7 @@ class Bird:
 
 # Main game loop
 class FlappyBird:
-    def __init__(self, graphique=True, FPS=30):
+    def __init__(self, graphique=True, FPS=30, save=None):
         # Setting up initial values
         pygame.init()
         if graphique:
@@ -107,7 +108,9 @@ class FlappyBird:
         self.graphique = graphique
         self.FPS = FPS
         self.gap = 150
-
+        self.save = save
+        if save is not None:
+            self.data=[]
         self.fontObj = pygame.font.Font(None, 16)
 
     def getState(self):
@@ -128,12 +131,8 @@ class FlappyBird:
             deuxiemePipeHeight = (self.pipes[compteur].height - 210) / 390
             deuxiemePipePos = self.pipes[compteur].pos / 600
 
-
-        return [self.bird.pos[1] / 400, premierPipeHeight, premierPipePos, deuxiemePipeHeight,
+        return [self.bird.pos[1] / 400, premierPipeHeight, premierPipePos, deuxiemePipeHeight - self.gap,
                 deuxiemePipePos, self.velocity / 30]
-
-        # return [self.bird.pos[1] / 400, premierPipeHeight, premierPipeHeight - self.gap, premierPipePos, deuxiemePipeHeight, deuxiemePipeHeight - self.gap,
-        #         deuxiemePipePos, self.velocity / 30]
 
     def getScore(self):
         return self.score
@@ -151,13 +150,15 @@ class FlappyBird:
         while True:
             for event in pygame.event.get():
                 if event.type == QUIT:
-                    pygame.quit()
-                    sys.exit()
+                    self.exit()
                 elif event.type == KEYDOWN:
                     if (event.key == K_ESCAPE):
                         return
 
     def exit(self):
+        if self.save is not None:
+            file = open(self.save, "bw+")
+            pickle.dump(self.data, file)
         pygame.quit()
         sys.exit()
 
@@ -173,10 +174,13 @@ class FlappyBird:
                     pygame.quit()
                     sys.exit()
                 elif event.type == KEYDOWN:
+                    self.data.append((self.getState(), "jump"))
                     if (event.key == K_ESCAPE):
                         self.pause()
                     # If the player hits a key, set velocity upward
                     self.velocity = -20
+                else:
+                    self.data.append((self.getState(), "stay"))
         else:
             if entry == "quit":
                 pygame.quit()
@@ -230,7 +234,6 @@ class FlappyBird:
 
 
 if __name__ == "__main__":
-    flappy = FlappyBird()
+    flappy = FlappyBird(save="entryData.pickle.dat")
     while True:
         flappy.nextFrame()
-        print(flappy.getState())
