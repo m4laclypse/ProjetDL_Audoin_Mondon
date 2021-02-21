@@ -138,6 +138,7 @@ class FlappyBird:
 
     # Called to reset the game when you lose
     def resetGame(self):
+        self.data = self.data[:-10]
         if (self.score > self.highScore):
             self.highScore = self.score
         self.score = 0
