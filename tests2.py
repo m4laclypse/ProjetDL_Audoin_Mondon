@@ -23,15 +23,11 @@ nelt = 6
 nbstates = nelt*4
 
 input_m = keras.Input(shape=(nbstates,)) 
-x = layers.Dense(150, activation='tanh')(input_m)
+x = layers.Dense(25, activation='tanh')(input_m)
 x = layers.Dropout(0.1)(x)
-x = layers.Dense(100, activation='tanh')(x)
+x = layers.Dense(15, activation='tanh')(x)
 x = layers.Dropout(0.1)(x)
-x = layers.Dense(50, activation='tanh')(x)
-x = layers.Dropout(0.1)(x)
-x = layers.Dense(25, activation='tanh')(x)
-x = layers.Dropout(0.1)(x)
-x = layers.Dense(10, activation='tanh')(x)
+x = layers.Dense(8, activation='tanh')(x)
 x = layers.Dropout(0.1)(x)
 x = layers.Dense(2, activation='tanh')(x)
 mlp = keras.Model(input_m,x)
@@ -69,7 +65,7 @@ class_weight = compute_class_weight('balanced', np.unique(z), z)
 class_weight = {0: class_weight[0], 1 : class_weight[1] * 10}
 
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size = 0.3, shuffle = True)
-history  = mlp.fit(X_train, y_train,epochs=3,batch_size = 50,shuffle = True,verbose=1
+history  = mlp.fit(X_train, y_train,epochs=1,batch_size = 50,shuffle = True,verbose=1
                     , validation_data=(X_test, y_test)
                     , class_weight=class_weight
                     )
