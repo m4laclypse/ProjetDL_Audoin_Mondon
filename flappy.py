@@ -109,8 +109,7 @@ class FlappyBird:
         self.FPS = FPS
         self.gap = 150
         self.save = save
-        if save is not None:
-            self.data=[]
+        self.data=[]
         self.fontObj = pygame.font.Font(None, 16)
 
     def getState(self):
@@ -161,6 +160,9 @@ class FlappyBird:
             pickle.dump(self.data, file)
         pygame.quit()
         sys.exit()
+    
+    def getPlayerHistory(self):
+        return self.data
 
     def nextFrame(self, manual=False, entry=None):
         lossValue = 0
@@ -234,6 +236,6 @@ class FlappyBird:
 
 
 if __name__ == "__main__":
-    flappy = FlappyBird(save="entryData.pickle.dat")
+    flappy = FlappyBird()
     while True:
         flappy.nextFrame()
