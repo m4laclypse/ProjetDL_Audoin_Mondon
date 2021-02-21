@@ -56,39 +56,45 @@ Lstd = [LstateNorm[:,i].std() for i in range(6)]
 #%%
 
 plt.figure()
-plt.subplot(3,2,1)
+plt.subplot(3,3,1)
 # plt.plot(Lstate[:,0])
 plt.plot(LstateNorm[:,0])
 plt.title("val1")
 
-plt.subplot(3,2,2)
+plt.subplot(3,3,2)
 # plt.plot(Lstate[:,1])
 plt.plot(LstateNorm[:,1])
 
 plt.title("val2")
 
-plt.subplot(3,2,3)
+plt.subplot(3,3,3)
 # plt.plot(Lstate[:,2])
 plt.plot(LstateNorm[:,2])
 plt.title("val3")
 
-plt.subplot(3,2,4)
+plt.subplot(3,3,4)
 # plt.plot(Lstate[:,3])
 plt.plot(LstateNorm[:,3])
 
 plt.title("val4")
 
-plt.subplot(3,2,5)
+plt.subplot(3,3,5)
 # plt.plot(Lstate[:,4])
 plt.plot(LstateNorm[:,4])
 
 plt.title("val5")
 
-plt.subplot(3,2,6)
+plt.subplot(3,3,6)
 # plt.plot(Lstate[:,5])
 plt.plot(LstateNorm[:,5])
 
 plt.title("val6")
 
+
+plt.subplot(3,3,6)
+# plt.plot(Lstate[:,5])
+plt.plot(LstateNorm[:,6])
+
+plt.title("val7")
 
 flappy.exit()

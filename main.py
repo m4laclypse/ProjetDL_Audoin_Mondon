@@ -61,7 +61,7 @@ def update(nSt,nSc,nP,nA,mlp,X,y,alpha,mu):
         preds = nP[i]
         state = nSt[i]
         result = nSc[i]
-        Q = (1-alpha)*preds[action] + alpha*(result/10 + mu*max(predsprec))
+        Q = (1-alpha)*preds[action] + alpha*(result/5 + mu*max(predsprec))
         preds[action] = Q
         X,y = add(X,y,state,preds)
         predsprec = preds
@@ -83,13 +83,16 @@ def fit(X,y):
     return X_train,y_train
 
 def modp(p):
-    if p > 0.1 :
-        return 0.97*p
+    if p > 0.5 :
+        return 0.99*p
     else :
         return 0
 
 def modalpha(a):
-    return 0.97*a+0.03*0.5
+    return 0.98*a+0.02*0.2
+
+
+nelt = 6
 
 def normalize(getstate):
     Lmean = [5.870e-01, 2.158e-01, 2.890e-02, 2.235e-01, 4.622e-01, -4.000e-04]
@@ -105,37 +108,38 @@ def normalize(getstate):
 
 #%% Reseau
 
-nbstates = 6*4
+nbstates = nelt*4
 
-input_m = keras.Input(shape=(nbstates,)) 
-x = layers.Dense(80, activation='tanh')(input_m)
-x = layers.Dense(40, activation='tanh')(x)
-x = layers.Dense(2, activation='tanh')(x)
-mlp = keras.Model(input_m,x)
-mlp.summary()
-mlp.compile(optimizer='adam', loss='mse')
-mlp.save('./mlp.h5')   
+# input_m = keras.Input(shape=(nbstates,)) 
+# x = layers.Dense(40, activation='tanh')(input_m)
+# x = layers.Dense(20, activation='tanh')(x)
+# x = layers.Dense(2, activation='tanh')(x)
+# mlp = keras.Model(input_m,x)
+# mlp.summary()
+# mlp.compile(optimizer='adam', loss='mae')
+# mlp.save('./mlp.h5')   
 
 memoire = 5000
 X = np.array([[0. for j in range(nbstates)] for i in range(memoire)])
 y = np.array([[0.,0.] for i in range(memoire)])
+loss = []
+valloss = []
+scores = []
+
 
 #%% Main
 
 
 mlp = models.load_model('./mlp.h5')
 
-p = 0.99
-alpha = 0.99
-mu = 0.8
-loss = []
-valloss = []
-scores = []
+p = 0.0
+alpha = 0.5
+mu = 0.9
 
-for iterations in range(200):
+for iterations in range(2000):
     t1 = time.time()
     step = 0 
-    flappy = FlappyBird(graphique = True, FPS = 300)
+    flappy = FlappyBird(graphique = False, FPS = 300)
     maxstep = 1000
     state_0 = np.zeros(nbstates)
     nState = np.array([state_0])
@@ -151,8 +155,8 @@ for iterations in range(200):
         if state == []:
             state = np.array(getstate.copy()+getstate.copy()+getstate.copy()+getstate.copy())
         else : 
-            state[6:] = state[:nbstates-6]
-            state[:6] = np.array(getstate.copy())
+            state[nelt:] = state[:nbstates-nelt]
+            state[:nelt] = np.array(getstate.copy())
             
         score = flappy.getScore()
         this_score = score
@@ -165,9 +169,11 @@ for iterations in range(200):
             entry = "stay"
         gameend = flappy.nextFrame(manual=True, entry=entry)
         if gameend != 0 :
+            print("session: Echec.")
             nScore = np.append(nScore,-2)
             break
         if step > maxstep :
+            print("session: Succès !")
             nScore = np.append(nScore,2)
             break
     X,y = update(nState,nScore,nPred,nAction,mlp,X,y,alpha,mu)
@@ -177,15 +183,15 @@ for iterations in range(200):
                        # validation_data=(X_test, y_test)
                        )
     loss += history.history['loss']
-    valloss += history.history['val_loss']
+    # valloss += history.history['val_loss']
     scores.append(this_score)
     t2 = time.time()
-    print("")
     print("session n°"+str(iterations+1))
     print("session de "+str(t2-t1)+" secondes")
     print("le score est de "+str(score))
     print("p = "+str(p))
     print("aplpha = "+str(alpha))
+    print("")
     p = modp(p)
     alpha = modalpha(alpha)
 

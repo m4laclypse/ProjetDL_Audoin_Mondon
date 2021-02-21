@@ -30,7 +30,7 @@ class Pipes:
 
     height = 0
     width = 60
-    gap = 150
+    gap = 250#150
     pos = 600
     replaced = False
     scored = False
@@ -128,8 +128,12 @@ class FlappyBird:
             deuxiemePipeHeight = (self.pipes[compteur].height - 210) / 390
             deuxiemePipePos = self.pipes[compteur].pos / 600
 
-        return [self.bird.pos[1] / 400, premierPipeHeight, premierPipeHeight - self.gap, premierPipePos, deuxiemePipeHeight, deuxiemePipeHeight - self.gap,
+
+        return [self.bird.pos[1] / 400, premierPipeHeight, premierPipePos, deuxiemePipeHeight,
                 deuxiemePipePos, self.velocity / 30]
+
+        # return [self.bird.pos[1] / 400, premierPipeHeight, premierPipeHeight - self.gap, premierPipePos, deuxiemePipeHeight, deuxiemePipeHeight - self.gap,
+        #         deuxiemePipePos, self.velocity / 30]
 
     def getScore(self):
         return self.score
