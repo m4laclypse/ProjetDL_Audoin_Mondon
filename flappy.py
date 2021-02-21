@@ -96,7 +96,7 @@ class FlappyBird:
         pygame.init()
         if graphique:
             self.windowObj = pygame.display.set_mode((640, 480))
-        self.fpsTimer = pygame.time.Clock()
+            self.fpsTimer = pygame.time.Clock()
 
         self.bird = Bird((640 / 4, 480 / 2))
         self.pipes = [Pipes()]
@@ -221,7 +221,7 @@ class FlappyBird:
 
         if self.graphique:
             pygame.display.update()
-        self.fpsTimer.tick(self.FPS)
+            self.fpsTimer.tick(self.FPS)
         return lossValue
 
 
