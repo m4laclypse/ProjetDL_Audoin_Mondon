@@ -54,9 +54,10 @@ for i in range(memoire):
         y[i] = np.array([-1,1])
 
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size = 0.3, shuffle = True)
-history  = mlp.fit(X_train, y_train,epochs=40,batch_size = 50,shuffle = True,verbose=1,
+history  = mlp.fit(X_train, y_train,epochs=100,batch_size = 50,shuffle = True,verbose=1,
                     validation_data=(X_test, y_test)
                     )
 
-plt.plot(history.history["loss"])
-plt.plot(history.history["val_loss"])
+plt.plot(np.log(history.history["loss"]), label = 'train')
+plt.plot(np.log(history.history["val_loss"]), label = 'test')
+plt.legend()
