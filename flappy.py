@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 """
 Created on Sun Feb 14 13:58:18 2021
-
 @author: loic9
 """
 
@@ -130,14 +129,19 @@ class FlappyBird:
             deuxiemePipeHeight = (self.pipes[compteur].height - 210) / 390
             deuxiemePipePos = self.pipes[compteur].pos / 600
 
-        return [self.bird.pos[1] / 400, premierPipeHeight, premierPipePos, deuxiemePipeHeight - self.gap,
+
+        return [self.bird.pos[1] / 400, premierPipeHeight, premierPipePos, deuxiemePipeHeight,
                 deuxiemePipePos, self.velocity / 30]
+
+        # return [self.bird.pos[1] / 400, premierPipeHeight, premierPipeHeight - self.gap, premierPipePos, deuxiemePipeHeight, deuxiemePipeHeight - self.gap,
+        #         deuxiemePipePos, self.velocity / 30]
 
     def getScore(self):
         return self.score
 
     # Called to reset the game when you lose
     def resetGame(self):
+        self.data = self.data[:-10]
         if (self.score > self.highScore):
             self.highScore = self.score
         self.score = 0

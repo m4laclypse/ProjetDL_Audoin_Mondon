@@ -25,7 +25,7 @@ def act(nSt,nSc,nP,nA,mlp,state,score,p):
     nSt = np.append(nSt,state, axis = 0)
     nSc = np.append(nSc,score)
     # res = mlp.predict(state)[0]
-    res = mlp(state)[0].numpy() #♣c'est 50 fois plus rapide
+    res = mlp(state)[0].numpy() #c'est 50 fois plus rapide
     n_action = len(res)
     action_true = np.argmax(res)
     action = alea(n_action,action_true,p)
@@ -62,7 +62,7 @@ def update(nSt,nSc,nP,nA,mlp,X,y,alpha,mu):
         preds = nP[i]
         state = nSt[i]
         result = nSc[i]
-        Q = (1-alpha)*preds[action] + alpha*(result/5 + mu*max(predsprec))
+        Q = (1-alpha)*preds[action] + alpha*(result/3 + mu*max(predsprec))
         preds[action] = Q
         X,y = add(X,y,state,preds)
         predsprec = preds
@@ -90,7 +90,9 @@ def modp(p):
         return 0
 
 def modalpha(a):
-    return 0.98*a+0.02*0.2
+    val = 0.993
+    lim = 0.2
+    return val*a+(1-val)*lim
 
 
 nelt = 6
@@ -111,14 +113,14 @@ def normalize(getstate):
 
 nbstates = nelt*4
 
-# input_m = keras.Input(shape=(nbstates,)) 
-# x = layers.Dense(40, activation='tanh')(input_m)
-# x = layers.Dense(20, activation='tanh')(x)
-# x = layers.Dense(2, activation='tanh')(x)
-# mlp = keras.Model(input_m,x)
-# mlp.summary()
-# mlp.compile(optimizer='adam', loss='mae')
-# mlp.save('./mlp.h5')   
+input_m = keras.Input(shape=(nbstates,)) 
+x = layers.Dense(40, activation='tanh')(input_m)
+x = layers.Dense(20, activation='tanh')(x)
+x = layers.Dense(2, activation='tanh')(x)
+mlp = keras.Model(input_m,x)
+mlp.summary()
+mlp.compile(optimizer='adam', loss='mae')
+mlp.save('./mlp.h5')   
 
 memoire = 5000
 X = np.array([[0. for j in range(nbstates)] for i in range(memoire)])
@@ -133,11 +135,11 @@ scores = []
 
 mlp = models.load_model('./mlp.h5')
 
-p = 0.0
-alpha = 0.5
+p = 0.99
+alpha = 0.99
 mu = 0.9
 
-for iterations in range(500):
+for iterations in range(200):
     tjeu = 0
     tpred = 0
     tentr = 0
@@ -168,7 +170,7 @@ for iterations in range(500):
         this_score = score
         score += survival_points
         action,nState,nScore,nPred,nAction = act(nState,nScore,nPred,nAction,mlp,state,score,p)
-        survival_points += 0.01
+        survival_points += 0.02
         tc = time.time()
         if action == 1:
             entry = "jump"
@@ -219,34 +221,3 @@ plt.figure()
 plt.plot(scores)
 mlp.save('./mlp.h5')     
 flappy.exit()
-
-#%%
-plt.figure()
-plt.subplot(3,2,1)
-plt.plot(X[:,0])
-plt.title("val1")
-
-plt.subplot(3,2,2)
-plt.plot(X[:,1])
-
-plt.title("val2")
-
-plt.subplot(3,2,3)
-plt.plot(X[:,2])
-plt.title("val3")
-
-plt.subplot(3,2,4)
-plt.plot(X[:,3])
-
-plt.title("val4")
-
-plt.subplot(3,2,5)
-plt.plot(X[:,4])
-
-plt.title("val5")
-
-plt.subplot(3,2,6)
-plt.plot(X[:,5])
-
-plt.title("val6")
-
