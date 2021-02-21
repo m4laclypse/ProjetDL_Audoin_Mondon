@@ -24,7 +24,8 @@ def act(nSt,nSc,nP,nA,mlp,state,score,p):
     state = state.reshape((1,len(state)))
     nSt = np.append(nSt,state, axis = 0)
     nSc = np.append(nSc,score)
-    res = mlp.predict(state)[0]
+    # res = mlp.predict(state)[0]
+    res = mlp(state)[0].numpy() #♣c'est 50 fois plus rapide
     n_action = len(res)
     action_true = np.argmax(res)
     action = alea(n_action,action_true,p)
@@ -136,7 +137,10 @@ p = 0.0
 alpha = 0.5
 mu = 0.9
 
-for iterations in range(2000):
+for iterations in range(500):
+    tjeu = 0
+    tpred = 0
+    tentr = 0
     t1 = time.time()
     step = 0 
     flappy = FlappyBird(graphique = False, FPS = 300)
@@ -150,8 +154,10 @@ for iterations in range(2000):
     
     state = []
     while True:
+        ta = time.time()
         getstate = flappy.getState()
         getstate = normalize(getstate)
+        tb = time.time()
         if state == []:
             state = np.array(getstate.copy()+getstate.copy()+getstate.copy()+getstate.copy())
         else : 
@@ -163,6 +169,7 @@ for iterations in range(2000):
         score += survival_points
         action,nState,nScore,nPred,nAction = act(nState,nScore,nPred,nAction,mlp,state,score,p)
         survival_points += 0.01
+        tc = time.time()
         if action == 1:
             entry = "jump"
         else :
@@ -176,18 +183,27 @@ for iterations in range(2000):
             print("session: Succès !")
             nScore = np.append(nScore,2)
             break
+        td = time.time()
+        tpred += tc - tb
+        tjeu = td - tc + ta - tb
+    te = time.time()
     X,y = update(nState,nScore,nPred,nAction,mlp,X,y,alpha,mu)
     X_f,y_f = fit(X,y)
     # X_train, X_test, y_train, y_test = train_test_split(X_f, y_f, test_size = 0.3, shuffle = True)
-    history  = mlp.fit(X_f, y_f,epochs=10,batch_size = 50,shuffle = True,verbose=0,
+    history  = mlp.fit(X_f, y_f,epochs=5,batch_size = 50,shuffle = True,verbose=0,
                        # validation_data=(X_test, y_test)
                        )
     loss += history.history['loss']
     # valloss += history.history['val_loss']
     scores.append(this_score)
     t2 = time.time()
+    tentr = t2 -te
+    tot = t2 - t1
     print("session n°"+str(iterations+1))
     print("session de "+str(t2-t1)+" secondes")
+    print("dont "+str(round(tjeu/tot*100))+"% de jeu")
+    print("dont "+str(round(tpred/tot*100))+"% de prédiction")
+    print("dont "+str(round(tentr/tot*100))+"% d'entrainement")
     print("le score est de "+str(score))
     print("p = "+str(p))
     print("aplpha = "+str(alpha))
