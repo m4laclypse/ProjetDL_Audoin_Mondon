@@ -16,10 +16,12 @@ import tensorflow as tf
 import matplotlib.pyplot as plt
 import time as time 
 from sklearn.model_selection import train_test_split
-
+from sklearn.utils.class_weight import compute_class_weight
 
 nelt = 6
 nbstates = nelt*4
+
+# x = layers.Dropout(0.2)(x)
 
 input_m = keras.Input(shape=(nbstates,)) 
 x = layers.Dense(40, activation='tanh')(input_m)
@@ -38,6 +40,8 @@ data = pickle.load(file)
 memoire = len(data)
 X = np.array([[0. for j in range(nbstates)] for i in range(memoire)])
 y = np.array([[0.,0.] for i in range(memoire)])
+z = np.array([0 for i in range(memoire)])
+
 
 state = []
 for i in range(memoire):
@@ -49,15 +53,22 @@ for i in range(memoire):
         state[:nelt] = np.array(getstate.copy()) 
     X[i] = state
     if data[i][1] == 'stay':
-        y[i] = np.array([1,-1])
+        y[i] = np.array([1,0])
+        z[i] = 0
     else :
-        y[i] = np.array([-1,1])
+        y[i] = np.array([0,1])
+        z[i] = 1
+
+class_weight = compute_class_weight('balanced',np.unique(z),z)
+class_weight = {0: class_weight[0], 1 : class_weight[1]}
 
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size = 0.3, shuffle = True)
-history  = mlp.fit(X_train, y_train,epochs=100,batch_size = 50,shuffle = True,verbose=1,
-                    validation_data=(X_test, y_test)
+history  = mlp.fit(X_train, y_train,epochs=300,batch_size = 50,shuffle = True,verbose=1
+                    , validation_data=(X_test, y_test)
+                    , class_weight=class_weight
                     )
 
 plt.plot(np.log(history.history["loss"]), label = 'train')
 plt.plot(np.log(history.history["val_loss"]), label = 'test')
 plt.legend()
+mlp.save('./mlp.h5')   
