@@ -15,7 +15,9 @@ def alea(n,a,p):
     r = np.random.random()
     if r < p:
         nr = np.random.random()
-        if nr <= 0.055 : return 1
+        # if nr <= 0.055:
+        if nr <= 0.1: 
+            return 1
         else : return 0
     else :
         return a
@@ -62,9 +64,11 @@ def update(nSt,nSc,nP,nA,mlp,X,y,alpha,mu):
         preds = nP[i]
         state = nSt[i]
         result = nSc[i]
-        Q = (1-alpha)*preds[action] + alpha*(result/3 + mu*max(predsprec))
+        Q = (1-alpha)*preds[action] + alpha*(result + mu*max(predsprec))
         preds[action] = Q
-        X,y = add(X,y,state,preds)
+        X[j] = state
+        y[j] = preds
+        #X,y = add(X,y,state,preds)
         predsprec = preds
     return X,y
 
@@ -90,9 +94,10 @@ def modp(p):
         return 0
 
 def modalpha(a):
-    val = 0.993
-    lim = 0.2
+    val = 0.997
+    lim = 0.9
     return val*a+(1-val)*lim
+    # return 0.9
 
 
 nelt = 6
@@ -114,17 +119,19 @@ def normalize(getstate):
 nbstates = nelt*4
 
 input_m = keras.Input(shape=(nbstates,)) 
-x = layers.Dense(40, activation='tanh')(input_m)
-x = layers.Dense(20, activation='tanh')(x)
-x = layers.Dense(2, activation='tanh')(x)
+x = layers.Dense(40, activation='relu')(input_m)
+x = layers.Dense(40, activation='relu')(x)
+x = layers.Dense(20, activation='relu')(x)
+x = layers.Dense(2, activation='softmax')(x)
 mlp = keras.Model(input_m,x)
 mlp.summary()
-mlp.compile(optimizer='adam', loss='mae')
+sgd = keras.optimizers.SGD(learning_rate=0.01)
+mlp.compile(optimizer=sgd, loss='mse')
 mlp.save('./mlp.h5')   
 
-# memoire = 5000
-# X = np.array([[0. for j in range(nbstates)] for i in range(memoire)])
-# y = np.array([[0.,0.] for i in range(memoire)])
+memoire = 5000
+X = np.array([[0. for j in range(nbstates)] for i in range(memoire)])
+y = np.array([[0.,0.] for i in range(memoire)])
 
 
 #%% pre data
@@ -152,9 +159,9 @@ for i in range(memoire):
         y[i] = np.array([-1,1])
 
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size = 0.3, shuffle = True)
-history  = mlp.fit(X_train, y_train,epochs=40,batch_size = 50,shuffle = True,verbose=1,
-                    validation_data=(X_test, y_test)
-                    )
+# history  = mlp.fit(X_train, y_train,epochs=40,batch_size = 50,shuffle = True,verbose=1,
+#                     validation_data=(X_test, y_test)
+#                     )
 
 
 memoire = 5000
@@ -170,13 +177,15 @@ scores = []
 #%% Main
 
 
-mlp = models.load_model('./mlp.h5')
+# mlp = models.load_model('./best_last.h5')
 
-p = 0.0
+p = 0.9
+# p = 0.0
 alpha = 0.99
-mu = 0.9
+mu = 0.3
 
-for iterations in range(200):
+maxScore = 0
+for iterations in range(500):
     tjeu = 0
     tpred = 0
     tentr = 0
@@ -207,7 +216,7 @@ for iterations in range(200):
         this_score = score
         score += survival_points
         action,nState,nScore,nPred,nAction = act(nState,nScore,nPred,nAction,mlp,state,score,p)
-        survival_points += 0.02
+        survival_points += 0.1
         tc = time.time()
         if action == 1:
             entry = "jump"
@@ -226,6 +235,9 @@ for iterations in range(200):
         tpred += tc - tb
         tjeu = td - tc + ta - tb
     te = time.time()
+    if this_score > maxScore:
+        maxScore = this_score
+        mlp.save('./best_last.h5')
     X,y = update(nState,nScore,nPred,nAction,mlp,X,y,alpha,mu)
     X_f,y_f = fit(X,y)
     # X_train, X_test, y_train, y_test = train_test_split(X_f, y_f, test_size = 0.3, shuffle = True)
@@ -250,11 +262,15 @@ for iterations in range(200):
     p = modp(p)
     alpha = modalpha(alpha)
 
+    if iterations % 200 == 0:
+        mlp.save('./mlp.h5')
 
+print(maxScore)
 plt.figure()
 plt.plot(loss)
 plt.plot(valloss)
 plt.figure()
 plt.plot(scores)
+plt.show()
 mlp.save('./mlp.h5')     
 flappy.exit()
