@@ -16,8 +16,8 @@ def alea(listeProbaAction,a,p):
     r = np.random.random()
     if r < p:
         nr = np.random.random()
-        # if nr <= 0.055:
-        if nr <= 0.1: 
+        if nr <= 0.055:
+        # if nr <= 0.1: 
             return 1
         else : return 0
     else :
@@ -124,13 +124,14 @@ def normalize(getstate):
 nbstates = nelt*4
 
 input_m = keras.Input(shape=(nbstates,)) 
-x = layers.Dense(40, activation='relu')(input_m)
-x = layers.Dense(40, activation='relu')(x)
+x = layers.Dense(20, activation='relu')(input_m)
+x = layers.Dense(10, activation='relu')(x)
 x = layers.Dense(20, activation='relu')(x)
+x = layers.Dense(10, activation='relu')(x)
 x = layers.Dense(2, activation='softmax')(x)
 mlp = keras.Model(input_m,x)
 mlp.summary()
-sgd = keras.optimizers.SGD(learning_rate=0.01)
+sgd = keras.optimizers.SGD(learning_rate=0.005)
 mlp.compile(optimizer=sgd, loss='mse')
 mlp.save('./mlp.h5')   
 
@@ -169,7 +170,7 @@ X_train, X_test, y_train, y_test = train_test_split(X, y, test_size = 0.3, shuff
 #                     )
 
 
-memoire = 5000
+memoire = 10000
 X = np.array([[0. for j in range(nbstates)] for i in range(memoire)])
 y = np.array([[0.,0.] for i in range(memoire)])
 
@@ -182,7 +183,10 @@ scores = []
 #%% Main
 
 
-# mlp = models.load_model('./best_last.h5')
+# mlp = models.load_model('./mlp.h5')
+# file = open("./x.pickle.dat", "br")
+# X = pickle.load(file)
+# file.close()
 
 p = 0.9
 # p = 0.0
@@ -278,5 +282,8 @@ plt.plot(valloss)
 plt.figure()
 plt.plot(scores)
 plt.show()
-mlp.save('./mlp.h5')     
+mlp.save('./mlp.h5')
 flappy.exit()
+file = open("./x.pickle.dat", "bw+")
+pickle.dump(X, file)
+file.close()
