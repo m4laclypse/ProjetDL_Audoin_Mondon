@@ -8,10 +8,11 @@ import tensorflow as tf
 import matplotlib.pyplot as plt
 import time as time 
 from sklearn.model_selection import train_test_split
+import random
 
 #%% Deep Q-Learning
 
-def alea(n,a,p):
+def alea(listeProbaAction,a,p):
     r = np.random.random()
     if r < p:
         nr = np.random.random()
@@ -20,7 +21,10 @@ def alea(n,a,p):
             return 1
         else : return 0
     else :
-        return a
+        # return a
+        choice = random.choices([0, 1], weights=listeProbaAction, k=1)[0]
+        return choice
+
     
 def act(nSt,nSc,nP,nA,mlp,state,score,p):
     state = state.reshape((1,len(state)))
@@ -30,7 +34,7 @@ def act(nSt,nSc,nP,nA,mlp,state,score,p):
     res = mlp(state)[0].numpy() #c'est 50 fois plus rapide
     n_action = len(res)
     action_true = np.argmax(res)
-    action = alea(n_action,action_true,p)
+    action = alea(res, action_true,p)
     if nP.shape == (0,):
         nP  = np.array([res]) 
     else :
@@ -47,7 +51,7 @@ def add(X,y,valx,valy):
     y[i] = valy
     return X ,y
 
-def update(nSt,nSc,nP,nA,mlp,X,y,alpha,mu):
+def update(nSt,nSc,nP,nA,mlp,X,y,alpha,mu, indice):
     n = len(nA)-1
     #on commence par gérer l'état final
     Q = nSc[n]
@@ -66,11 +70,12 @@ def update(nSt,nSc,nP,nA,mlp,X,y,alpha,mu):
         result = nSc[i]
         Q = (1-alpha)*preds[action] + alpha*(result + mu*max(predsprec))
         preds[action] = Q
-        X[j] = state
-        y[j] = preds
+        X[indice] = state
+        y[indice] = preds
         #X,y = add(X,y,state,preds)
         predsprec = preds
-    return X,y
+        indice = indice + 1 % len(X)
+    return X, y, indice
 
 
 def fit(X,y):
@@ -201,6 +206,7 @@ for iterations in range(500):
     survival_points = 0
     
     state = []
+    indice = 0
     while True:
         ta = time.time()
         getstate = flappy.getState()
@@ -238,10 +244,10 @@ for iterations in range(500):
     if this_score > maxScore:
         maxScore = this_score
         mlp.save('./best_last.h5')
-    X,y = update(nState,nScore,nPred,nAction,mlp,X,y,alpha,mu)
+    X, y, indice = update(nState,nScore,nPred,nAction,mlp,X,y,alpha,mu, indice)
     X_f,y_f = fit(X,y)
     # X_train, X_test, y_train, y_test = train_test_split(X_f, y_f, test_size = 0.3, shuffle = True)
-    history  = mlp.fit(X_f, y_f,epochs=5,batch_size = 50,shuffle = True,verbose=0,
+    history  = mlp.fit(X_f, y_f, epochs=5, batch_size = 50, shuffle=True, verbose=0,
                        # validation_data=(X_test, y_test)
                        )
     loss += history.history['loss']
