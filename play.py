@@ -1,41 +1,36 @@
 # -*- coding: utf-8 -*-
 """
-Created on Sun Feb 21 14:47:03 2021
-
-@author: loic9
+Ce fichier permet de faire jouer le meilleur modèle a avoir été créé lors du dernier entraînement
 """
 
-
-
 from flappy import FlappyBird
-import keras
-from keras import layers
 import numpy as np
 from keras import models
 import time
-import tensorflow as tf
 import matplotlib.pyplot as plt
 import time as time 
-from sklearn.model_selection import train_test_split
+import random
 
-def alea(n,a,p):
+def alea(listeProbaAction,p):
+    """
+    Permet de forcer aléatoirement des mouvements pour donner des données à l'apprentissage
+    """
     r = np.random.random()
     if r < p:
         nr = np.random.random()
-        if nr < 0.07 : return 1
+        if nr <= 0.055:
+            return 1
         else : return 0
     else :
-        return a
+        choice = random.choices([0, 1], weights=listeProbaAction, k=1)[0]
+        return choice
 
 def act(nSt,nSc,nP,nA,mlp,state,score,p):
     state = state.reshape((1,len(state)))
     nSt = np.append(nSt,state, axis = 0)
     nSc = np.append(nSc,score)
-    # res = mlp.predict(state)[0]
-    res = mlp(state)[0].numpy() #♣c'est 50 fois plus rapide
-    n_action = len(res)
-    action_true = np.argmax(res)
-    action = alea(n_action,action_true,p)
+    res = mlp(state)[0].numpy()
+    action = alea(res,p)
     if nP.shape == (0,):
         nP  = np.array([res]) 
     else :
@@ -56,7 +51,7 @@ def normalize(getstate):
     return getstate
 
 
-mlp = models.load_model('./mlp.h5')
+mlp = models.load_model('./modele_final.h5')
 nelt = 6
 nbstates = nelt*4
 scores = []
@@ -64,8 +59,8 @@ scores = []
 
 for iterations in range(20):
     step = 0 
-    flappy = FlappyBird(graphique = True, FPS = 30)
-    maxstep = 1000
+    flappy = FlappyBird(graphique = True, FPS = 30, quickstart=True)
+    maxstep = 2000
     state_0 = np.zeros(nbstates)
     nState = np.array([state_0])
     nScore = np.array([])
