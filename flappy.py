@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Created on Sun Feb 14 13:58:18 2021
-
-@author: loic9
+Ce fichier implémente le jeu Flappy Bird en lui-même
 """
 
 import pygame
@@ -14,47 +12,39 @@ from random import randrange as randH
 from pygame.constants import KEYDOWN, K_ESCAPE, QUIT
 from pygame.locals import *
 
-# by John Mathison
-
-# Ground Elevation (pixels)
 groundLevel = 400
 
-# Global colors
 birdColor = pygame.Color('#222222')
 backgroundColor = pygame.Color('#abcdef')
 groundColor = pygame.Color('#993333')
 fontColor = pygame.Color('#FFFFFF')
 
 
-# Class for pipe obstacles
 class Pipes:
 
     height = 0
     width = 60
-    gap = 250  # 150
+    gap = 250
     pos = 600
     replaced = False
     scored = False
     first = False
 
-    # Randomize pipe location
     def __init__(self):
         self.height = randH(210, groundLevel - 10)
 
-    # Moves the pipes along the ground, checks if they're off the screen
     def move(self, movement):
         self.pos += movement
         if (self.pos + self.width < 0):
-            return False  # Return false if we moved off the screen
+            return False
         return True
 
-    # Handles drawing the pipes to the screen
+
     def draw(self, surface):
         pygame.draw.rect(surface, groundColor, (self.pos, self.height, self.width, groundLevel - self.height))
         pygame.draw.rect(surface, groundColor, (self.pos, 0, self.width, self.height - self.gap))
 
 
-# Class for the player
 class Bird:
 
     pos = (0, 0)
@@ -63,24 +53,21 @@ class Bird:
     def __init__(self, newPos):
         self.pos = newPos
 
-    # Handles drawing the bird to the screen
     def draw(self, surface):
         intPos = (int(math.floor(self.pos[0])), int(math.floor(self.pos[1])))
 
         pygame.draw.circle(surface, birdColor, intPos, self.radius)
 
-    # Attempt to move the bird, make sure we aren't hitting the ground
     def move(self, movement):
         posX, posY = self.pos
         movX, movY = movement
 
         if((posY + movY + self.radius) < groundLevel):
             self.pos = (posX + movX, posY + movY)
-            return True  # Return if we successfuly moved
+            return True 
         self.pos = (posX, groundLevel - self.radius)
         return False
 
-    # Test for collision with the given pipe
     def collision(self, pipe):
         posX, posY = self.pos
         collideWidth = (pipe.pos < posX + self.radius and posX - self.radius < pipe.pos + pipe.width)
@@ -91,10 +78,20 @@ class Bird:
         return False
 
 
-# Main game loop
+def normalize(getstate):
+    Lmean = [5.870e-01, 2.158e-01, 2.890e-02, 2.235e-01, 4.622e-01, -4.000e-04]
+    Lstd = [0.1286, 0.1291, 0.13, 0.1465, 0.2003, 0.388 ]
+    if getstate[2] >= 0.45 :
+        getstate[2] = 0.0
+    for i in range(6):
+        getstate[i] = (getstate[i]-Lmean[i])/Lstd[i]
+    if getstate[4] <= -1.75 :
+        getstate[4] = 0.0
+    return getstate
+
+
 class FlappyBird:
     def __init__(self, graphique=True, FPS=30, save=None, quickstart=False):
-        # Setting up initial values
         pygame.init()
         if graphique:
             self.windowObj = pygame.display.set_mode((640, 480))
@@ -151,7 +148,6 @@ class FlappyBird:
     def getScore(self):
         return self.score
 
-    # Called to reset the game when you lose
     def resetGame(self):
         self.data = self.data[:-10]
         if (self.score > self.highScore):
@@ -199,7 +195,6 @@ class FlappyBird:
 
         hasJumped = False
         if not manual:
-            # Check for events
             for event in pygame.event.get():
                 if event.type == QUIT:
                     pygame.quit()
@@ -208,24 +203,19 @@ class FlappyBird:
                     hasJumped = True
                     if (event.key == K_ESCAPE):
                         self.pause()
-                    # If the player hits a key, set velocity upward
                     self.velocity = -20
-        
-        if hasJumped:
-            self.data.append((normalize(self.getState()), "jump"))
-        else:
-            self.data.append((normalize(self.getState()), "stay"))
-
-        if len(self.data) % 100 == 0:
-            print("On a ", len(self.data), " points de données")
         else:
             if entry == "quit":
                 pygame.quit()
                 sys.exit()
             elif entry == "jump":
                 self.velocity = -20
+        
+        if hasJumped:
+            self.data.append((normalize(self.getState()), "jump"))
+        else:
+            self.data.append((normalize(self.getState()), "stay"))
 
-        # Add acceleration from gravity
         self.velocity += self.gravity
 
         if (not self.bird.move((0, self.velocity))):
@@ -252,7 +242,6 @@ class FlappyBird:
             if(not pipe.move(-10)):
                 del pipe
 
-        # Draw stuff
         scoreSurface = self.fontObj.render('Score: ' + str(self.score) + ' High: ' + str(self.highScore),
                                            False, fontColor)
         scoreRect = scoreSurface.get_rect()
@@ -270,19 +259,7 @@ class FlappyBird:
         return lossValue
 
 
-def normalize(getstate):
-    Lmean = [5.870e-01, 2.158e-01, 2.890e-02, 2.235e-01, 4.622e-01, -4.000e-04]
-    Lstd = [0.1286, 0.1291, 0.13, 0.1465, 0.2003, 0.388 ]
-    if getstate[2] >= 0.45 :
-        getstate[2] = 0.0
-    for i in range(6):
-        getstate[i] = (getstate[i]-Lmean[i])/Lstd[i]
-    if getstate[4] <= -1.75 :
-        getstate[4] = 0.0
-    return getstate
-
-
 if __name__ == "__main__":
-    flappy = FlappyBird(save="entryDataDepart.pickle.dat")
+    flappy = FlappyBird(quickstart=True)
     while True:
         flappy.nextFrame()
