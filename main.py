@@ -129,7 +129,7 @@ def getNetwork():
     """
     input_m = keras.Input(shape=(nbstates,)) 
     x = layers.Dense(20, activation='swish')(input_m)
-    x = layers.Dense(20, activation='swish')(x)
+    x = layers.Dense(10, activation='swish')(x)
     x = layers.Dense(20, activation='swish')(x)
     x = layers.Dense(10, activation='swish')(x)
     x = layers.Dense(2, activation="softmax")(x)
